@@ -1,0 +1,21 @@
+//Example of the use of Redis on our online ordering platform
+
+$sqlsel = "SELECT rest.restaurant_id, rest.restaurant_name, rest.restaurant_seourl, rest.restaurant_phone, rest.restaurant_logo, rest.restaurant_website, rest.restaurant_zip, rest.restaurant_fax, rest.restaurant_streetaddress, rest.restaurant_contact_name, rest.restaurant_contact_phone, rest.restaurant_contact_email, rest.restaurant_description, rest.restaurant_estimated_time, rest.restaurant_delivery, rest.restaurant_delivery_charge, rest.restaurant_minorder_price, rest.cashbackPercentage, rest.liveStatus, rest.restaurant_serving_cuisines, rest.restaurant_feature_status, rest.restaurant_set_status,rest.restaurant_set_time, ROUND( ( ( SUM(rvw.rating) / (COUNT(rvw.rating_id)*5) )*100 ) ,1) AS total_rating, rest.restaurant_booktable ".$open_close_time_cond.' '.$select_gmap_service."location.locationname".
+                    "	FROM ".$CFG['table']['restaurant']." AS rest ".
+                    " LEFT JOIN ".$CFG['table']['restaurant_timing']." AS re ON rest.restaurant_id = re.restaurant_id ".
+                    " LEFT JOIN ".$CFG['table']['location']." AS location ON rest.restaurant_location = location.location_id ".
+                    #" LEFT JOIN ".$CFG['table']['restaurant_menu']." AS menu ON rest.restaurant_id = menu.restaurant_id ".
+                    " LEFT JOIN ".$CFG['table']['restaurant_offer']." AS offer ON rest.restaurant_id = offer.restaurant_id ".
+                    " LEFT JOIN ".$CFG['table']['restaurant_serving_cuisines']." AS cui ON rest.restaurant_id = cui.restaurant_id ".
+                    " LEFT JOIN ".$CFG['table']['cuisine']." AS cuisine ON cuisine.cuisine_id = cui.cuisine_id ".
+                    " LEFT JOIN ".$CFG['table']['restaurant_delivery_areas']." AS area ON rest.restaurant_id = area.restaurant_id ".
+                    " LEFT JOIN ".$CFG['table']['restaurant_reviews']." AS rvw ON rest.restaurant_id = rvw.restaurant_id ".
+                    "	WHERE rest.restaurant_status = '1' AND rest.delete_status = 'NO'  AND (rest.restaurant_delivery = 'Yes' OR rest.restaurant_pickup = 'Yes') ".$wherecond." GROUP BY rest.restaurant_id ".$sortby." ";
+                    
+                    
+                    //We had to use redis here as the response time with join operation was ~1100ms.
+                    //Since most of the restaurant data remained same, we used the cache which reduced response time for this API to ~70ms
+                    //with compression, the response size was very small
+                    //with update, the key-value pairs were updated
+                    
+                    
